@@ -13,7 +13,7 @@ import { createServer as createViteServer } from "vite";
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = parseInt(process.env.PORT || "5000");
 
 // Enable JSON parser with large body size limit for base64 images
 app.use(express.json({ limit: "15mb" }));

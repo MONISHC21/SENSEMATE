@@ -1,0 +1,620 @@
+# SENSEMATE ULTIMATE MASTER PROMPT
+
+## AI-Powered Accessibility Companion for People with Disabilities
+
+You are an elite team consisting of:
+
+* Senior AI Engineer
+* Principal Software Architect
+* Accessibility Specialist
+* Computer Vision Engineer
+* Machine Learning Engineer
+* Full Stack Engineer
+* UI/UX Designer
+* Product Designer
+* DevOps Engineer
+* QA Engineer
+* Cybersecurity Engineer
+
+Your mission is to design and build a complete, production-quality MVP called:
+
+# SenseMate
+
+### See. Hear. Communicate.
+
+An AI-powered accessibility companion that improves communication, accessibility, independence, and inclusion for visually impaired, hearing-impaired, and speech-impaired individuals.
+
+The solution must be practical, deployable, scalable, modern, accessible, and capable of running on low-resource hardware while providing a premium user experience.
+
+---
+
+# CORE VISION
+
+Most assistive technologies solve only one problem.
+
+SenseMate must become a unified accessibility platform that combines:
+
+* AI Vision
+* Object Detection
+* OCR Reading
+* Speech Accessibility
+* Sign Language Communication
+* Disability-to-Disability Communication
+
+into a single user-friendly system.
+
+The system should act as an intelligent digital companion that helps users understand their surroundings, access information, and communicate effectively.
+
+---
+
+# PRODUCT PRINCIPLES
+
+Prioritize:
+
+1. Accessibility First
+2. Simplicity
+3. Reliability
+4. Low Cost
+5. Real-World Impact
+6. Offline Capability
+7. Fast Performance
+8. Inclusive Design
+9. Easy Deployment
+10. Future Scalability
+
+Every design decision must support these principles.
+
+---
+
+# TARGET USERS
+
+### Visually Impaired Users
+
+Needs:
+
+* Object identification
+* Text reading
+* Environmental awareness
+* Voice guidance
+
+### Hearing-Impaired Users
+
+Needs:
+
+* Speech-to-text conversion
+* Visual communication
+
+### Speech-Impaired Users
+
+Needs:
+
+* Sign language communication
+* Text-to-speech output
+
+### Caregivers
+
+Needs:
+
+* Easy interaction
+* Accessibility support
+
+---
+
+# TECHNOLOGY STRATEGY
+
+Avoid:
+
+* OpenAI APIs
+* Gemini APIs
+* Claude APIs
+* Paid cloud AI
+* Heavy GPU requirements
+* Large language model dependencies
+
+Use only free, open-source, lightweight technologies.
+
+---
+
+# APPROVED TECHNOLOGY STACK
+
+Frontend:
+
+* HTML5
+* CSS3
+* JavaScript
+
+Backend:
+
+* Python Flask
+
+Computer Vision:
+
+* OpenCV
+* MediaPipe
+* YOLOv8 Nano
+
+OCR:
+
+* EasyOCR
+
+Speech Recognition:
+
+* Browser Web Speech API
+
+Voice Output:
+
+* Browser SpeechSynthesis API
+
+Deployment:
+
+* Hugging Face Spaces
+* Render
+
+Version Control:
+
+* GitHub
+
+---
+
+# SYSTEM ARCHITECTURE
+
+```text
+User Browser
+      │
+      ▼
+Frontend Interface
+      │
+      ▼
+Flask Backend
+      │
+ ┌────┼────┬────┐
+ ▼    ▼    ▼    ▼
+YOLO OCR MediaPipe Speech
+```
+
+Architecture must be modular.
+
+Every module must operate independently.
+
+Failure of one module must not crash the entire application.
+
+---
+
+# MODULE 1
+
+# SMART ACCESSIBILITY DASHBOARD
+
+Purpose:
+
+Single unified control center.
+
+Requirements:
+
+Large accessibility-friendly cards.
+
+Modules:
+
+* Object Detection
+* Text Reader
+* Speech To Text
+* Text To Speech
+* Sign Language Translator
+* Communication Bridge
+* About
+
+Design:
+
+Modern.
+
+Minimal.
+
+High contrast.
+
+Mobile responsive.
+
+Dark mode support.
+
+Accessibility compliant.
+
+WCAG-friendly.
+
+---
+
+# MODULE 2
+
+# OBJECT DETECTION ASSISTANT
+
+Purpose:
+
+Help visually impaired users understand surroundings.
+
+Technology:
+
+YOLOv8 Nano
+
+Requirements:
+
+Real-time webcam processing.
+
+Detect:
+
+* Person
+* Chair
+* Bottle
+* Cell Phone
+* Laptop
+* Backpack
+* Car
+* Bicycle
+* Bus
+* Door
+
+Output:
+
+Visual labels.
+
+Confidence score.
+
+Voice guidance.
+
+Examples:
+
+Person ahead.
+
+Chair in front.
+
+Vehicle nearby.
+
+Avoid repetitive announcements.
+
+Implement intelligent cooldown.
+
+Only announce meaningful detections.
+
+Optimize for CPU.
+
+---
+
+# MODULE 3
+
+# OCR TEXT READER
+
+Purpose:
+
+Read printed information aloud.
+
+Technology:
+
+EasyOCR
+
+Use Cases:
+
+* Signboards
+* Documents
+* Medicine Labels
+* Menus
+* Notices
+
+Workflow:
+
+Camera
+→ OCR
+→ Extract Text
+→ Display Text
+→ Speak Text
+
+Requirements:
+
+Handle low-light conditions.
+
+Display extracted text.
+
+Allow copying text.
+
+Support future multilingual expansion.
+
+---
+
+# MODULE 4
+
+# SPEECH TO TEXT
+
+Purpose:
+
+Assist hearing-impaired users.
+
+Technology:
+
+Browser Speech Recognition.
+
+Features:
+
+Start Listening.
+
+Stop Listening.
+
+Continuous mode.
+
+Live transcription.
+
+Conversation history.
+
+Requirements:
+
+Fast response.
+
+Clear UI.
+
+Error recovery.
+
+---
+
+# MODULE 5
+
+# TEXT TO SPEECH
+
+Purpose:
+
+Assist visually impaired users.
+
+Technology:
+
+Browser SpeechSynthesis.
+
+Features:
+
+Input text.
+
+Speak text.
+
+Pause.
+
+Resume.
+
+Stop.
+
+Voice selection.
+
+Speed control.
+
+Volume control.
+
+---
+
+# MODULE 6
+
+# SIGN LANGUAGE TRANSLATOR
+
+Purpose:
+
+Assist speech-impaired users.
+
+Technology:
+
+MediaPipe Hands.
+
+Workflow:
+
+Webcam
+→ Hand Landmark Detection
+→ Gesture Recognition
+→ Text Output
+→ Voice Output
+
+MVP Gestures:
+
+* Hello
+* Help
+* Thank You
+* Yes
+* No
+
+Requirements:
+
+Rule-based classification.
+
+No model training required.
+
+Fast.
+
+Reliable.
+
+Future-ready.
+
+---
+
+# MODULE 7
+
+# ACCESSIBILITY COMMUNICATION BRIDGE
+
+Purpose:
+
+Enable communication between different disabilities.
+
+Scenario 1:
+
+Speech-Impaired User
+→ Sign Language
+
+System
+→ Voice Output
+
+Visually Impaired User
+→ Hears Message
+
+Scenario 2:
+
+Visually Impaired User
+→ Voice Input
+
+System
+→ Text Output
+
+Hearing-Impaired User
+→ Reads Message
+
+Requirements:
+
+Unified conversation panel.
+
+Conversation history.
+
+Timestamped messages.
+
+Clear accessibility design.
+
+---
+
+# MODULE 8
+
+# ACCESSIBILITY INSIGHTS PANEL
+
+Purpose:
+
+Provide usage analytics.
+
+Show:
+
+* Objects detected today
+* Text scanned today
+* Voice interactions
+* Sign language interactions
+
+Dashboard cards.
+
+Lightweight implementation.
+
+---
+
+# PERFORMANCE REQUIREMENTS
+
+Target Device:
+
+4GB RAM Laptop
+
+Must:
+
+* Run on CPU
+* Startup under 10 seconds
+* RAM usage below 1.5GB
+* Maintain responsiveness
+* Avoid memory leaks
+
+Use:
+
+YOLOv8 Nano only.
+
+Lazy loading.
+
+Model reuse.
+
+Frame skipping.
+
+Resolution optimization.
+
+Thread-safe architecture.
+
+---
+
+# ACCESSIBILITY REQUIREMENTS
+
+Mandatory:
+
+Keyboard navigation.
+
+Large clickable areas.
+
+High contrast mode.
+
+Readable typography.
+
+Responsive layout.
+
+Colorblind-friendly design.
+
+Screen-reader compatibility.
+
+Clear feedback messages.
+
+Accessible error states.
+
+---
+
+# SECURITY REQUIREMENTS
+
+Validate all inputs.
+
+Sanitize uploaded files.
+
+Prevent crashes.
+
+Prevent browser permission abuse.
+
+Handle missing camera.
+
+Handle missing microphone.
+
+Graceful failure.
+
+---
+
+# DEPLOYMENT REQUIREMENTS
+
+Deployable on:
+
+* Hugging Face Spaces
+* Render
+
+Must provide:
+
+* Public URL
+* Easy setup
+* Zero paid APIs
+* Free deployment compatibility
+
+---
+
+# FUTURE ROADMAP
+
+Design architecture to support:
+
+Phase 2:
+
+* Smart Glasses Integration
+* GPS Navigation
+* Currency Recognition
+* Face Recognition
+* Emergency SOS
+* AI Scene Description
+* Movie Narration for Blind Users
+* Real-Time Accessibility Assistant
+* Android App
+* Progressive Web App
+* Offline AI Models
+
+---
+
+# DELIVERABLES
+
+Generate:
+
+1. Full software architecture
+2. Folder structure
+3. Frontend code
+4. Backend code
+5. YOLO integration
+6. EasyOCR integration
+7. MediaPipe integration
+8. Speech Recognition integration
+9. SpeechSynthesis integration
+10. Error handling
+11. Logging system
+12. Configuration management
+13. requirements.txt
+14. README.md
+15. Deployment guide
+16. Testing guide
+17. Accessibility audit checklist
+18. Production-ready MVP
+
+The final result must feel like a real-world accessibility product, not a student demo. It should be technically sound, highly maintainable, cost-efficient, modern, inclusive, scalable, and optimized for free deployment while delivering maximum impact for people with disabilities.
