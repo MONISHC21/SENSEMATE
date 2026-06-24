@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Eye, FileText, Mic, Volume2, Hand, MessageSquare, Info, LogOut, ArrowRight, Settings } from "lucide-react";
+import { Eye, FileText, Mic, Volume2, Hand, MessageSquare, Info, LogOut, ArrowRight, Pen, Activity } from "lucide-react";
 import { ActiveTab } from "../types";
 
 interface MainDashboardProps {
@@ -61,6 +61,22 @@ export default function MainDashboard({ onSelectTab, onResetSession }: MainDashb
       icon: MessageSquare,
       color: "from-indigo-500/10 to-indigo-600/5 hover:border-indigo-500/35 border-slate-800 text-indigo-400",
       badge: "Bridge Dialog"
+    },
+    {
+      id: "gesture_canvas" as ActiveTab,
+      title: "Gesture Drawing Canvas",
+      desc: "Draw on screen using your index finger. Peace sign erases. Open hand clears. AI tracks hand landmarks in real time.",
+      icon: Pen,
+      color: "from-violet-500/10 to-violet-600/5 hover:border-violet-500/35 border-slate-800 text-violet-400",
+      badge: "Hand Draw"
+    },
+    {
+      id: "motion_detection" as ActiveTab,
+      title: "Motion Detection & Alerts",
+      desc: "Frame differencing detects moving objects like OpenCV. Voice alerts announce position and count of motion regions.",
+      icon: Activity,
+      color: "from-emerald-500/10 to-emerald-600/5 hover:border-emerald-500/35 border-slate-800 text-emerald-400",
+      badge: "Motion Alert"
     },
     {
       id: "about" as ActiveTab,

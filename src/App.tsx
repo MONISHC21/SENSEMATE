@@ -4,13 +4,15 @@
  */
 
 import { useState, useEffect } from "react";
-import { Sparkles, ArrowLeft, RefreshCw, Eye, HelpCircle } from "lucide-react";
+import { Sparkles, ArrowLeft, RefreshCw } from "lucide-react";
 import MainDashboard from "./components/MainDashboard";
 import ObjectDetection from "./components/ObjectDetection";
 import OCRReader from "./components/OCRReader";
 import SpeechToText from "./components/SpeechToText";
 import TextToSpeech from "./components/TextToSpeech";
 import GestureTranslator from "./components/GestureTranslator";
+import GestureCanvas from "./components/GestureCanvas";
+import MotionDetection from "./components/MotionDetection";
 import CommunicationBridge from "./components/CommunicationBridge";
 import AboutPage from "./components/AboutPage";
 import AiEngineSettings from "./components/AiEngineSettings";
@@ -55,6 +57,10 @@ export default function App() {
         return <TextToSpeech key={sessionKey} />;
       case "gesture":
         return <GestureTranslator key={sessionKey} />;
+      case "gesture_canvas":
+        return <GestureCanvas key={sessionKey} />;
+      case "motion_detection":
+        return <MotionDetection key={sessionKey} />;
       case "communication_bridge":
         return <CommunicationBridge key={sessionKey} />;
       case "about":
@@ -81,6 +87,10 @@ export default function App() {
         return { title: "Text to Speech Synthesis", subtitle: "Convert custom texts into natural spoken voices using neural models" };
       case "gesture":
         return { title: "Sign Language Translator", subtitle: "Classify and verbalize core sign expressions through live vision" };
+      case "gesture_canvas":
+        return { title: "Gesture Drawing Canvas", subtitle: "Draw on screen using your index finger — hand-controlled creative tool" };
+      case "motion_detection":
+        return { title: "Motion Detection & Alerts", subtitle: "Frame differencing detects moving objects and announces their position" };
       case "communication_bridge":
         return { title: "Accessibility Communication Bridge", subtitle: "Multi-modal translations supporting Deaf, Blind, and Speech-Impaired companions" };
       case "about":

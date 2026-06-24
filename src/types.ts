@@ -51,5 +51,7 @@ export type ActiveTab =
   | 'speech_to_text'
   | 'text_to_speech'
   | 'gesture'
+  | 'gesture_canvas'
+  | 'motion_detection'
   | 'communication_bridge'
   | 'about';

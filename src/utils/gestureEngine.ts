@@ -31,6 +31,32 @@ export async function loadGestureModel(): Promise<void> {
   await getDetector();
 }
 
+export async function getHandKeypoints(
+  source: HTMLVideoElement | HTMLCanvasElement
+): Promise<{ keypoints: handPoseDetection.Keypoint[]; videoWidth: number; videoHeight: number } | null> {
+  const det = await getDetector();
+
+  let processSource: HTMLCanvasElement | HTMLVideoElement = source;
+  if (source instanceof HTMLVideoElement && source.videoWidth > 0 && source.videoHeight > 0) {
+    const cap = document.createElement('canvas');
+    cap.width = source.videoWidth;
+    cap.height = source.videoHeight;
+    const capCtx = cap.getContext('2d');
+    if (capCtx) {
+      capCtx.drawImage(source, 0, 0, cap.width, cap.height);
+      processSource = cap;
+    }
+  }
+
+  const hands = await det.estimateHands(processSource as HTMLVideoElement);
+  if (hands.length === 0) return null;
+
+  const w = source instanceof HTMLVideoElement ? source.videoWidth : source.width;
+  const h = source instanceof HTMLVideoElement ? source.videoHeight : source.height;
+
+  return { keypoints: hands[0].keypoints, videoWidth: w, videoHeight: h };
+}
+
 const TIP = { THUMB: 4, INDEX: 8, MIDDLE: 12, RING: 16, PINKY: 20 };
 const MCP = { INDEX: 5, MIDDLE: 9, RING: 13, PINKY: 17 };
 const PIP = { INDEX: 6, MIDDLE: 10, RING: 14, PINKY: 18 };
