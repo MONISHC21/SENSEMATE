@@ -1,0 +1,6 @@
+{
+  "name": "SenseMate",
+  "description": "An AI-powered accessibility companion for visually, hearing, and speech-impaired individuals featuring object detection, OCR reading, speech-to-text, text-to-speech, and sign language translation.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
