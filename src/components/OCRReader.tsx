@@ -32,13 +32,20 @@ export default function OCRReader() {
   }, []);
 
   const handleCaptureAndExtract = async () => {
-    const videoElem = document.getElementById("camera-video-element") as any;
-    if (!videoElem || !videoElem.captureFrame) {
-      setError("Webcam stream is not ready. Please verify connection.");
+    const videoElem = document.getElementById("camera-video-element") as HTMLVideoElement;
+    if (!videoElem || videoElem.readyState < 2) {
+      setError("Camera is not ready yet. Please wait a moment for the webcam to start.");
       return;
     }
-    const frameData = videoElem.captureFrame();
-    if (!frameData) { setError("Failed to capture image."); return; }
+    const w = videoElem.videoWidth || 640;
+    const h = videoElem.videoHeight || 480;
+    const tmp = document.createElement("canvas");
+    tmp.width = w;
+    tmp.height = h;
+    const ctx = tmp.getContext("2d");
+    if (!ctx) { setError("Failed to create capture canvas."); return; }
+    ctx.drawImage(videoElem, 0, 0, w, h);
+    const frameData = tmp.toDataURL("image/jpeg", 0.9);
     setCapturedImage(frameData);
     await processOCR(frameData);
   };

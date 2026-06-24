@@ -131,6 +131,11 @@ export default function ObjectDetection() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    // Sync canvas DOM dimensions to its rendered CSS size
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width > 0) canvas.width = rect.width;
+    if (rect.height > 0) canvas.height = rect.height;
+
     const scaleX = canvas.width / (video.videoWidth || canvas.width);
     const scaleY = canvas.height / (video.videoHeight || canvas.height);
 

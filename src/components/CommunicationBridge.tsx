@@ -49,7 +49,8 @@ export default function CommunicationBridge() {
       "system"
     );
 
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const inIframe = window !== window.top;
+    const SR = !inIframe && (window.SpeechRecognition || window.webkitSpeechRecognition);
     if (SR) {
       const recognition = new SR();
       recognition.continuous = false;

@@ -26,6 +26,14 @@ export default function SpeechToText() {
       "system"
     );
 
+    // Replit preview and many embedded iframes block Speech Recognition
+    const inIframe = window !== window.top;
+    if (inIframe) {
+      setIsSupported(false);
+      setError("OPEN IN NEW TAB: Speech recognition is blocked inside embedded previews. Click the external link icon (⬡) in the Replit toolbar to open the app in a full browser tab, then it will work.");
+      return;
+    }
+
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
       setIsSupported(false);
@@ -140,11 +148,22 @@ export default function SpeechToText() {
           </div>
 
           {!isSupported ? (
-            <div className="flex flex-col items-center gap-3 text-slate-500 py-6">
-              <WifiOff className="h-10 w-10 text-rose-500" />
-              <p className="font-sans text-xs text-rose-400 max-w-xs text-center leading-relaxed">
-                Speech recognition requires Chrome, Edge, or Safari. Please switch browsers.
-              </p>
+            <div className="flex flex-col items-center gap-4 text-slate-500 py-4 px-2 w-full">
+              <WifiOff className="h-10 w-10 text-amber-400" />
+              <div className="text-center">
+                <p className="font-sans text-sm font-semibold text-amber-300 mb-1">
+                  Must open in full browser tab
+                </p>
+                <p className="font-sans text-xs text-slate-400 max-w-xs leading-relaxed">
+                  {error}
+                </p>
+              </div>
+              <button
+                onClick={() => window.open(window.location.href, '_blank')}
+                className="mt-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition-colors flex items-center gap-2"
+              >
+                ↗ Open App in New Tab
+              </button>
             </div>
           ) : (
             <>
