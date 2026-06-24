@@ -211,23 +211,33 @@ export default function GestureTranslator() {
               </p>
             </div>
           ) : (
-            <div className="flex-1 flex items-center justify-between bg-slate-950 border border-slate-800 p-4 rounded-2xl">
-              <div className="flex flex-col gap-1">
-                <span className="font-sans text-[9px] text-slate-500 uppercase tracking-widest font-semibold">Recognized Gesture</span>
-                <span className={`font-sans font-bold text-3xl ${translatedGesture.gesture === 'Unknown' ? 'text-slate-500' : 'text-indigo-300'}`}>
-                  {translatedGesture.gesture}
-                </span>
-                <span className="font-sans text-xs text-slate-300 font-medium mt-1 leading-relaxed">
-                  📢 "{translatedGesture.meaning}"
-                </span>
-              </div>
-              {translatedGesture.gesture !== 'Unknown' && (
-                <div className="flex flex-col items-end border-l border-slate-800/80 pl-5 ml-4 shrink-0">
-                  <span className="font-mono text-2xl font-bold text-emerald-400">
-                    {translatedGesture.confidenceScore}%
+            <div className="flex-1 flex flex-col gap-3">
+              <div className="flex items-center justify-between bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+                <div className="flex flex-col gap-1">
+                  <span className="font-sans text-[9px] text-slate-500 uppercase tracking-widest font-semibold">Recognized Gesture</span>
+                  <span className={`font-sans font-bold text-3xl ${translatedGesture.gesture === 'Unknown' ? 'text-slate-500' : 'text-indigo-300'}`}>
+                    {translatedGesture.gesture}
                   </span>
-                  <span className="font-sans text-[9px] text-slate-500 uppercase tracking-wider font-semibold mt-0.5">
-                    Accuracy
+                  <span className="font-sans text-xs text-slate-300 font-medium mt-1 leading-relaxed">
+                    📢 "{translatedGesture.meaning}"
+                  </span>
+                </div>
+                {translatedGesture.gesture !== 'Unknown' && (
+                  <div className="flex flex-col items-end border-l border-slate-800/80 pl-5 ml-4 shrink-0">
+                    <span className="font-mono text-2xl font-bold text-emerald-400">
+                      {translatedGesture.confidenceScore}%
+                    </span>
+                    <span className="font-sans text-[9px] text-slate-500 uppercase tracking-wider font-semibold mt-0.5">
+                      Accuracy
+                    </span>
+                  </div>
+                )}
+              </div>
+              {translatedGesture.debugInfo && (
+                <div className="bg-slate-950/80 border border-slate-800/60 px-3 py-2 rounded-xl flex items-center gap-2">
+                  <Cpu className="h-3 w-3 text-slate-500 shrink-0" />
+                  <span className="font-mono text-[10px] text-slate-400">
+                    Fingers detected: <span className="text-indigo-300">{translatedGesture.debugInfo}</span>
                   </span>
                 </div>
               )}

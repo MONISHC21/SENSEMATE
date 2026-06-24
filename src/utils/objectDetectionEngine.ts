@@ -77,3 +77,28 @@ export async function detectObjects(
     })),
   };
 }
+
+export function generateSceneDescription(objects: DetectedObject[], rawPredictions: CocoDetection[]): string {
+  if (objects.length === 0) return 'Clear path ahead. No obstacles detected in the current view.';
+
+  const left   = objects.filter(o => o.position.includes('left'));
+  const right  = objects.filter(o => o.position.includes('right'));
+  const center = objects.filter(o => !o.position.includes('left') && !o.position.includes('right'));
+
+  const parts: string[] = [];
+  if (left.length)   parts.push(`to your left: ${left.map(o => o.label).join(' and ')}`);
+  if (center.length) parts.push(`directly ahead: ${center.map(o => o.label).join(' and ')}`);
+  if (right.length)  parts.push(`to your right: ${right.map(o => o.label).join(' and ')}`);
+
+  let desc = `I can see ${objects.length} ${objects.length === 1 ? 'object' : 'objects'}. `;
+  desc += parts.join('; ') + '. ';
+
+  // Closest object = largest bounding box area
+  if (rawPredictions.length > 0) {
+    const nearest = rawPredictions.reduce((a, b) => (a.bbox[2] * a.bbox[3]) > (b.bbox[2] * b.bbox[3]) ? a : b);
+    const nearObj = objects.find(o => o.label.toLowerCase() === nearest.class.toLowerCase());
+    if (nearObj) desc += `Closest: ${nearObj.label} — ${nearObj.warning}.`;
+  }
+
+  return desc;
+}

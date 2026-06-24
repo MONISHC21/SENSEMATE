@@ -1,5 +1,6 @@
 import * as handPoseDetection from '@tensorflow-models/hand-pose-detection';
-import '@tensorflow/tfjs';
+import * as tf from '@tensorflow/tfjs';
+import '@tensorflow/tfjs-backend-webgl';
 
 export type GestureName = 'Hello' | 'Help' | 'Thank You' | 'Yes' | 'No' | 'Unknown';
 
@@ -13,9 +14,12 @@ export function isGestureModelLoaded(): boolean {
 async function getDetector(): Promise<handPoseDetection.HandDetector> {
   if (detector) return detector;
   if (!detectorPromise) {
+    // Ensure TF.js backend is ready before creating detector
+    await tf.ready();
     const modelType = handPoseDetection.SupportedModels.MediaPipeHands;
     detectorPromise = handPoseDetection.createDetector(modelType, {
       runtime: 'tfjs' as const,
+      modelType: 'lite',
       maxHands: 1,
     });
   }
@@ -35,7 +39,7 @@ function fingerUp(kps: handPoseDetection.Keypoint[], tip: number, pip: number): 
   return kps[tip].y < kps[pip].y;
 }
 
-function classifyHand(kps: handPoseDetection.Keypoint[]): { gesture: GestureName; meaning: string; score: number } { // eslint-disable-line
+function classifyHand(kps: handPoseDetection.Keypoint[]): { gesture: GestureName; meaning: string; score: number; debugInfo: string } {
   // Y axis in image space: smaller Y = higher in frame (tip above pip = finger extended)
   const indexUp  = fingerUp(kps, TIP.INDEX,  PIP.INDEX);
   const middleUp = fingerUp(kps, TIP.MIDDLE, PIP.MIDDLE);
@@ -43,57 +47,74 @@ function classifyHand(kps: handPoseDetection.Keypoint[]): { gesture: GestureName
   const pinkyUp  = fingerUp(kps, TIP.PINKY,  PIP.PINKY);
   const extended = [indexUp, middleUp, ringUp, pinkyUp].filter(Boolean).length;
 
-  // Thumb up: tip y is significantly above the thumb MCP (keypoint 2)
-  const thumbExtended = kps[TIP.THUMB].y < kps[2].y;
+  // Thumb: compare tip Y to thumb MCP (kp 2) — tip higher in frame (smaller Y) = extended up
+  const thumbExtended = kps[TIP.THUMB].y < kps[2].y - 15;
 
-  // Open hand (Hello): all 4 fingers clearly extended
+  const debugInfo = `I:${indexUp?'↑':'↓'} M:${middleUp?'↑':'↓'} R:${ringUp?'↑':'↓'} P:${pinkyUp?'↑':'↓'} T:${thumbExtended?'↑':'↓'} [${extended}/4]`;
+
+  // Open hand (Hello): 3 or 4 fingers extended
   if (extended >= 3) {
-    return { gesture: 'Hello', meaning: 'The person is greeting you — Hello!', score: extended === 4 ? 92 : 85 };
+    return { gesture: 'Hello', meaning: 'The person is greeting you — Hello!', score: extended === 4 ? 92 : 85, debugInfo };
   }
-  // Thumbs up (Yes): thumb raised, other fingers folded
-  if (thumbExtended && extended === 0) {
-    return { gesture: 'Yes', meaning: 'The person is agreeing — Yes!', score: 88 };
+  // Thumbs up (Yes): thumb raised, all other fingers folded
+  if (thumbExtended && extended <= 1) {
+    return { gesture: 'Yes', meaning: 'The person is agreeing — Yes!', score: 88, debugInfo };
   }
-  // Three fingers (Thank You): index + middle + ring
-  if (indexUp && middleUp && ringUp && !pinkyUp) {
-    return { gesture: 'Thank You', meaning: 'The person is expressing gratitude — Thank You!', score: 87 };
-  }
-  // Two fingers (peace/help): index + middle only
-  if (indexUp && middleUp && !ringUp && !pinkyUp) {
-    return { gesture: 'Help', meaning: 'The person is asking for Help!', score: 85 };
-  }
-  // Horns sign (No): index + pinky, middle + ring folded
+  // Horns sign (No): index + pinky extended, middle + ring folded
   if (indexUp && !middleUp && !ringUp && pinkyUp) {
-    return { gesture: 'No', meaning: 'The person is saying No!', score: 86 };
+    return { gesture: 'No', meaning: 'The person is saying No!', score: 86, debugInfo };
   }
-  // Single index (point/help): index only
+  // Three fingers up (Thank You): index + middle + ring
+  if (indexUp && middleUp && ringUp && !pinkyUp) {
+    return { gesture: 'Thank You', meaning: 'The person is expressing gratitude — Thank You!', score: 87, debugInfo };
+  }
+  // Two fingers peace / V sign (Help)
+  if (indexUp && middleUp && !ringUp && !pinkyUp) {
+    return { gesture: 'Help', meaning: 'The person is asking for Help!', score: 85, debugInfo };
+  }
+  // Single pointing finger (Help)
   if (indexUp && !middleUp && !ringUp && !pinkyUp) {
-    return { gesture: 'Help', meaning: 'The person is pointing for help — Help me!', score: 83 };
+    return { gesture: 'Help', meaning: 'The person needs help — pointing gesture detected!', score: 83, debugInfo };
   }
-  // Fist (Help): no fingers, no thumb
+  // Closed fist — needs help
   if (extended === 0 && !thumbExtended) {
-    return { gesture: 'Help', meaning: 'The person needs assistance — Help!', score: 80 };
+    return { gesture: 'Help', meaning: 'The person needs assistance — Help!', score: 78, debugInfo };
   }
 
-  return { gesture: 'Unknown', meaning: 'Gesture not clearly recognized. Show your hand closer to the camera.', score: 0 };
+  return { gesture: 'Unknown', meaning: 'Gesture not clearly recognized. Show your full hand closer to the camera.', score: 0, debugInfo };
 }
 
 export async function classifyGesture(
   source: HTMLVideoElement | HTMLImageElement | HTMLCanvasElement
-): Promise<{ gesture: GestureName; meaning: string; confidenceScore: number }> {
+): Promise<{ gesture: GestureName; meaning: string; confidenceScore: number; debugInfo: string }> {
   const det = await getDetector();
-  const hands = await det.estimateHands(source as HTMLVideoElement);
+
+  // Capture video to canvas first for reliable pixel access
+  let processSource: HTMLCanvasElement | HTMLVideoElement | HTMLImageElement = source;
+  if (source instanceof HTMLVideoElement && source.videoWidth > 0 && source.videoHeight > 0) {
+    const cap = document.createElement('canvas');
+    cap.width = source.videoWidth;
+    cap.height = source.videoHeight;
+    const capCtx = cap.getContext('2d');
+    if (capCtx) {
+      capCtx.drawImage(source, 0, 0, cap.width, cap.height);
+      processSource = cap;
+    }
+  }
+
+  const hands = await det.estimateHands(processSource as HTMLVideoElement);
 
   if (hands.length === 0) {
     return {
       gesture: 'Unknown',
-      meaning: 'No hand detected. Please position your hand clearly in the center.',
+      meaning: 'No hand detected. Hold your hand up closer to the camera, with fingers visible.',
       confidenceScore: 0,
+      debugInfo: 'No hand found in frame',
     };
   }
 
   const kps = hands[0].keypoints;
-  const { gesture, meaning, score } = classifyHand(kps);
+  const { gesture, meaning, score, debugInfo } = classifyHand(kps);
 
-  return { gesture, meaning, confidenceScore: score };
+  return { gesture, meaning, confidenceScore: score, debugInfo };
 }

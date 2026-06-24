@@ -23,6 +23,7 @@ export interface GestureResponse {
   gesture: 'Hello' | 'Help' | 'Thank You' | 'Yes' | 'No' | 'Unknown';
   meaning: string;
   confidenceScore: number;
+  debugInfo?: string;
 }
 
 export interface TranscriptionResponse {

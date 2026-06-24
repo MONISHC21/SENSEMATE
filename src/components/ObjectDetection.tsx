@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { Eye, ShieldAlert, Volume2, Play, Square, RefreshCw, Layers, Cpu, Zap } from "lucide-react";
+import { Eye, ShieldAlert, Volume2, Play, Square, RefreshCw, Layers, Cpu, Zap, MessageSquare } from "lucide-react";
 import CameraFeed from "./CameraFeed";
 import { speakText } from "../utils/speech";
 import { DetectedObject } from "../types";
-import { detectObjects, loadObjectDetectionModel, isObjectModelLoaded, CocoDetection } from "../utils/objectDetectionEngine";
+import { detectObjects, loadObjectDetectionModel, isObjectModelLoaded, CocoDetection, generateSceneDescription } from "../utils/objectDetectionEngine";
 
 export default function ObjectDetection() {
   const [isActive, setIsActive] = useState(false);
@@ -11,6 +11,7 @@ export default function ObjectDetection() {
   const [isContinuous, setIsContinuous] = useState(false);
   const [scanIntervalSeconds, setScanIntervalSeconds] = useState<number>(3);
   const [detections, setDetections] = useState<DetectedObject[]>([]);
+  const [sceneDescription, setSceneDescription] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [modelReady, setModelReady] = useState(false);
@@ -95,23 +96,24 @@ export default function ObjectDetection() {
       setDetections(detected);
       drawOverlays(detected, rawPredictions, videoElem);
 
+      // Generate and speak scene description
+      const scene = generateSceneDescription(detected, rawPredictions);
+      setSceneDescription(scene);
+
       const now = Date.now();
-      const announcements: string[] = [];
-      detected.forEach((obj) => {
+      const shouldAnnounce = detected.some(obj => {
         const key = `${obj.label}-${obj.position}`;
         const last = lastAnnouncedRef.current.get(key) || 0;
-        if (now - last > 5000) {
-          announcements.push(obj.warning);
-          lastAnnouncedRef.current.set(key, now);
-        }
+        return now - last > 5000;
       });
 
-      if (announcements.length > 0) {
-        const speech = announcements.join(". ");
-        setLogs((prev) => [`🔊 Spoken: "${speech}"`, ...prev.slice(0, 19)]);
-        speakText(speech, "system");
-      } else if (detected.length === 0) {
-        setLogs((prev) => ["ℹ️ Scan complete. No obstacles detected.", ...prev.slice(0, 19)]);
+      if (shouldAnnounce || detected.length === 0) {
+        detected.forEach(obj => {
+          const key = `${obj.label}-${obj.position}`;
+          lastAnnouncedRef.current.set(key, now);
+        });
+        setLogs((prev) => [`🔊 ${scene}`, ...prev.slice(0, 19)]);
+        speakText(scene, "system");
       }
     } catch (err: any) {
       setError(err.message || "Detection failed. Please try again.");
@@ -278,6 +280,23 @@ export default function ObjectDetection() {
       </div>
 
       <div className="lg:col-span-5 flex flex-col gap-4">
+        {/* Scene Description Card */}
+        {sceneDescription && (
+          <div className="bg-indigo-950/50 border border-indigo-500/30 p-4 rounded-2xl shadow-lg flex gap-3 items-start">
+            <MessageSquare className="h-4 w-4 text-indigo-400 mt-0.5 shrink-0" />
+            <div className="flex flex-col gap-1 flex-1">
+              <span className="font-sans text-[9px] text-indigo-400 uppercase tracking-widest font-semibold">Scene Description</span>
+              <p className="font-sans text-xs text-slate-200 leading-relaxed">{sceneDescription}</p>
+              <button
+                onClick={() => speakText(sceneDescription, "system")}
+                className="mt-1 self-start flex items-center gap-1.5 text-[10px] text-indigo-300 hover:text-indigo-200 font-medium transition-colors"
+              >
+                <Volume2 className="h-3 w-3" /> Read aloud again
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="bg-slate-900 border border-slate-800 p-5 rounded-3xl flex flex-col h-[280px] shadow-lg">
           <h4 className="font-sans font-semibold text-sm text-slate-200 border-b border-slate-800/80 pb-3 mb-3 flex items-center gap-2">
             <Layers className="h-4 w-4 text-indigo-400" />
