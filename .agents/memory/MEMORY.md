@@ -1,0 +1,1 @@
+- [Offline AI Architecture](offline-ai-arch.md) — all 5 AI features run 100% in-browser; no Gemini keys needed; model list + engines documented.
