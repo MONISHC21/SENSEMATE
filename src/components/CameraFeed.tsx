@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useRef, useState, RefObject } from "react";
-import { Camera, CameraOff, RefreshCw, AlertTriangle } from "lucide-react";
+import { CameraOff, RefreshCw, AlertTriangle, SwitchCamera } from "lucide-react";
 
 interface CameraFeedProps {
   onCapture?: (base64Image: string) => void;
@@ -24,28 +24,39 @@ export default function CameraFeed({
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
+  const facingModeRef = useRef<"user" | "environment">("user");
+
+  useEffect(() => {
+    facingModeRef.current = facingMode;
+  }, [facingMode]);
 
   useEffect(() => {
     if (isActive) {
-      startCamera();
+      startCamera(facingMode);
     } else {
       stopCamera();
     }
-
     return () => {
       stopCamera();
     };
-  }, [isActive]);
+  }, [isActive, facingMode]);
 
-  const startCamera = async () => {
+  const startCamera = async (facing: "user" | "environment") => {
     setIsLoading(true);
     setError(null);
+    // Stop any existing stream first
+    if (videoRef.current && videoRef.current.srcObject) {
+      const old = videoRef.current.srcObject as MediaStream;
+      old.getTracks().forEach(t => t.stop());
+      videoRef.current.srcObject = null;
+    }
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-          facingMode: "user",
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: { ideal: facing },
         },
         audio: false,
       });
@@ -56,7 +67,7 @@ export default function CameraFeed({
     } catch (err: any) {
       console.error("Camera access failed:", err);
       setError(
-        "Could not access the camera. Please make sure camera permissions are granted and no other application is using it."
+        "Could not access the camera. Please ensure camera permissions are granted and no other app is using it."
       );
     } finally {
       setIsLoading(false);
@@ -73,6 +84,11 @@ export default function CameraFeed({
     }
   };
 
+  const flipCamera = () => {
+    const next = facingModeRef.current === "user" ? "environment" : "user";
+    setFacingMode(next);
+  };
+
   const captureFrame = (): string | null => {
     if (!videoRef.current || !stream) return null;
 
@@ -84,9 +100,11 @@ export default function CameraFeed({
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
 
-    // Flip horizontally for a more natural mirror effect
-    ctx.translate(canvas.width, 0);
-    ctx.scale(-1, 1);
+    // Mirror only for front camera
+    if (facingModeRef.current === "user") {
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+    }
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     const base64Image = canvas.toDataURL("image/jpeg", 0.85);
@@ -96,26 +114,28 @@ export default function CameraFeed({
     return base64Image;
   };
 
-  // Expose capture method globally on the video element's parent if needed,
-  // or use the onCapture triggers.
   useEffect(() => {
     if (videoRef.current) {
       (videoRef.current as any).captureFrame = captureFrame;
+      (videoRef.current as any).facingMode = facingMode;
     }
-  }, [stream]);
+  }, [stream, facingMode]);
+
+  const isFront = facingMode === "user";
 
   return (
     <div
       id="camera-feed-container"
       className={`relative rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden flex flex-col justify-center items-center ${className}`}
     >
-      {/* Hidden helper canvas for frame extraction */}
       <canvas ref={internalCanvasRef} className="hidden" />
 
       {isLoading && (
         <div id="camera-loading" className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 z-10 text-slate-300">
           <RefreshCw className="h-10 w-10 animate-spin text-indigo-400 mb-4" />
-          <p className="font-sans text-sm font-medium">Initializing Webcam stream...</p>
+          <p className="font-sans text-sm font-medium">
+            {facingMode === "environment" ? "Switching to rear camera..." : "Initializing camera..."}
+          </p>
         </div>
       )}
 
@@ -123,12 +143,10 @@ export default function CameraFeed({
         <div id="camera-error" className="absolute inset-0 p-6 flex flex-col items-center justify-center text-center bg-slate-950/95 z-10">
           <AlertTriangle className="h-12 w-12 text-rose-500 mb-4" />
           <h4 className="font-sans font-semibold text-rose-200 mb-2">Camera Unavailable</h4>
-          <p className="font-sans text-xs text-slate-400 max-w-sm mb-6 leading-relaxed">
-            {error}
-          </p>
+          <p className="font-sans text-xs text-slate-400 max-w-sm mb-6 leading-relaxed">{error}</p>
           <button
             id="retry-camera-btn"
-            onClick={startCamera}
+            onClick={() => startCamera(facingMode)}
             className="px-4 py-2 bg-rose-600/20 hover:bg-rose-600/35 border border-rose-500/30 rounded-xl font-sans text-xs font-medium text-rose-200 transition-colors"
           >
             Retry Connection
@@ -141,23 +159,36 @@ export default function CameraFeed({
         </div>
       ) : null}
 
-      {/* Main Video Stream */}
+      {/* Main Video Stream — mirror only for front camera */}
       <video
         id="camera-video-element"
         ref={videoRef}
         autoPlay
         playsInline
         muted
-        className="w-full h-full object-cover scale-x-[-1]" // Visual mirroring
+        className={`w-full h-full object-cover ${isFront ? "scale-x-[-1]" : ""}`}
       />
 
-      {/* Absolute positioning overlays for bounding boxes, overlays */}
+      {/* Overlay canvas for bounding boxes etc. */}
       {overlayCanvasRef && (
         <canvas
           id="camera-overlay-canvas"
           ref={overlayCanvasRef}
           className="absolute inset-0 w-full h-full z-20 pointer-events-none"
         />
+      )}
+
+      {/* Flip camera button — always visible when active */}
+      {isActive && !error && (
+        <button
+          id="flip-camera-btn"
+          onClick={flipCamera}
+          title={isFront ? "Switch to rear camera" : "Switch to front camera"}
+          className="absolute bottom-3 right-3 z-30 flex items-center gap-1.5 px-3 py-2 bg-slate-900/80 hover:bg-slate-800 backdrop-blur-sm border border-slate-700/70 rounded-xl text-slate-300 hover:text-white transition-all shadow-lg text-[11px] font-sans font-medium"
+        >
+          <SwitchCamera className="h-4 w-4" />
+          {isFront ? "Rear Cam" : "Front Cam"}
+        </button>
       )}
     </div>
   );

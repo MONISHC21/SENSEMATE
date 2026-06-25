@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Pen, Eraser, Trash2, RefreshCw, Palette, Minus, Plus, Hand, Cpu, AlertTriangle } from "lucide-react";
+import { Pen, Eraser, Trash2, RefreshCw, Palette, Minus, Plus, Hand, Cpu, AlertTriangle, SwitchCamera } from "lucide-react";
 import { loadGestureModel, getHandKeypoints } from "../utils/gestureEngine";
 import { speakText } from "../utils/speech";
 import type { Keypoint } from "@tensorflow-models/hand-pose-detection";
@@ -25,8 +25,9 @@ function drawSkeleton(
   kps: Keypoint[],
   vidW: number, vidH: number,
   canW: number, canH: number,
+  mirror: boolean,
 ) {
-  const toX = (x: number) => (1 - x / vidW) * canW; // mirror x
+  const toX = (x: number) => mirror ? (1 - x / vidW) * canW : (x / vidW) * canW;
   const toY = (y: number) => (y / vidH) * canH;
 
   ctx.strokeStyle = 'rgba(99,102,241,0.7)';
@@ -55,9 +56,10 @@ export default function GestureCanvas() {
   const [brushSize, setBrushSize] = useState(5);
   const [mode, setMode] = useState<DrawMode>('lift');
   const [gestureLabel, setGestureLabel] = useState('No hand detected');
-  const [strokeCount, setStrokeCount] = useState(0);
-  const [isActive] = useState(true);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
+  const [cameraLoading, setCameraLoading] = useState(false);
 
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const drawCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const skelCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafRef = useRef<number>(0);
@@ -65,21 +67,58 @@ export default function GestureCanvas() {
   const lastPoseTimeRef = useRef<number>(0);
   const colorRef = useRef(color);
   const brushRef = useRef(brushSize);
-  const strokeCountRef = useRef(0);
   const historyRef = useRef<ImageData[]>([]);
+  const facingRef = useRef<'user' | 'environment'>('user');
+  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => { colorRef.current = color; }, [color]);
   useEffect(() => { brushRef.current = brushSize; }, [brushSize]);
+  useEffect(() => { facingRef.current = facingMode; }, [facingMode]);
+
+  // Start camera with given facing mode
+  const startCamera = useCallback(async (facing: 'user' | 'environment') => {
+    setCameraLoading(true);
+    setError(null);
+    // Stop previous stream
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) videoRef.current.srcObject = null;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: { ideal: facing } },
+        audio: false,
+      });
+      streamRef.current = stream;
+      if (videoRef.current) videoRef.current.srcObject = stream;
+    } catch (err: any) {
+      setError('Camera access denied. Please allow camera permissions.');
+    } finally {
+      setCameraLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     speakText("Gesture Drawing Canvas. Point your index finger to draw. Show your full hand to clear. Use the peace sign to erase.", "system");
     loadGestureModel()
       .then(() => { setModelReady(true); setModelLoading(false); })
       .catch(err => { setError(err.message); setModelLoading(false); });
+    startCamera('user');
     return () => {
       cancelAnimationFrame(rafRef.current);
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop());
+      }
     };
-  }, []);
+  }, [startCamera]);
+
+  const flipCamera = useCallback(() => {
+    const next = facingRef.current === 'user' ? 'environment' : 'user';
+    setFacingMode(next);
+    prevPointRef.current = null;
+    startCamera(next);
+  }, [startCamera]);
 
   const clearCanvas = useCallback(() => {
     const dc = drawCanvasRef.current;
@@ -89,8 +128,6 @@ export default function GestureCanvas() {
     ctx.clearRect(0, 0, dc.width, dc.height);
     prevPointRef.current = null;
     historyRef.current = [];
-    strokeCountRef.current = 0;
-    setStrokeCount(0);
   }, []);
 
   const undo = useCallback(() => {
@@ -114,23 +151,20 @@ export default function GestureCanvas() {
 
   useEffect(() => {
     if (!modelReady) return;
-
     const POSE_MS = 80;
 
     const loop = async (ts: number) => {
       rafRef.current = requestAnimationFrame(loop);
-
       if (ts - lastPoseTimeRef.current < POSE_MS) return;
       lastPoseTimeRef.current = ts;
 
-      const video = document.getElementById('camera-video-element') as HTMLVideoElement;
+      const video = videoRef.current;
       if (!video || video.readyState < 2) return;
 
       const dc = drawCanvasRef.current;
       const sc = skelCanvasRef.current;
       if (!dc || !sc) return;
 
-      // Sync skeleton canvas to its rendered size
       const scRect = sc.getBoundingClientRect();
       if (scRect.width > 0) { sc.width = scRect.width; sc.height = scRect.height; }
 
@@ -140,18 +174,19 @@ export default function GestureCanvas() {
       sCtx.clearRect(0, 0, sc.width, sc.height);
 
       if (!result) {
-        setGestureLabel('No hand detected — hold your hand up in the camera');
+        setGestureLabel('No hand detected — hold your hand up in camera');
         prevPointRef.current = null;
         setMode('lift');
         return;
       }
 
       const { keypoints: kps, videoWidth: vW, videoHeight: vH } = result;
+      const isMirror = facingRef.current === 'user';
 
-      // Draw skeleton overlay on camera preview
-      drawSkeleton(sCtx, kps, vW, vH, sc.width, sc.height);
+      // Draw skeleton overlay
+      drawSkeleton(sCtx, kps, vW, vH, sc.width, sc.height, isMirror);
 
-      // Determine gesture from finger states
+      // Determine gesture
       const fingerUp = (tip: number, pip: number) => kps[tip].y < kps[pip].y;
       const iUp = fingerUp(8, 6);
       const mUp = fingerUp(12, 10);
@@ -159,12 +194,16 @@ export default function GestureCanvas() {
       const pUp = fingerUp(20, 18);
       const extended = [iUp, mUp, rUp, pUp].filter(Boolean).length;
 
-      // Get index tip in draw-canvas coords (mirrored x)
-      const tipX = (1 - kps[8].x / vW) * dc.width;
+      // Convert index tip to drawing canvas coords, respecting mirror
+      const tipX = isMirror
+        ? (1 - kps[8].x / vW) * dc.width
+        : (kps[8].x / vW) * dc.width;
       const tipY = (kps[8].y / vH) * dc.height;
 
-      // Draw cursor dot on skeleton canvas (at corresponding position)
-      const cursorX = (1 - kps[8].x / vW) * sc.width;
+      // Also draw cursor circle on the skeleton overlay
+      const cursorX = isMirror
+        ? (1 - kps[8].x / vW) * sc.width
+        : (kps[8].x / vW) * sc.width;
       const cursorY = (kps[8].y / vH) * sc.height;
       sCtx.beginPath();
       sCtx.arc(cursorX, cursorY, 10, 0, Math.PI * 2);
@@ -172,7 +211,6 @@ export default function GestureCanvas() {
       sCtx.lineWidth = 2;
       sCtx.stroke();
 
-      // Gesture logic
       if (extended >= 3) {
         clearCanvas();
         setGestureLabel('Open hand — Canvas CLEARED');
@@ -192,13 +230,10 @@ export default function GestureCanvas() {
         label = '☝ Index — Drawing';
       }
 
-      if (newMode !== mode) {
-        setMode(newMode);
-        if (newMode === 'draw') saveSnapshot();
-      }
+      if (newMode === 'draw' && mode !== 'draw') saveSnapshot();
+      setMode(newMode);
       setGestureLabel(label);
 
-      // Apply drawing or erasing to draw canvas
       const dCtx = dc.getContext('2d');
       if (!dCtx) return;
 
@@ -222,11 +257,6 @@ export default function GestureCanvas() {
             dCtx.lineJoin = 'round';
             dCtx.stroke();
             dCtx.globalCompositeOperation = 'source-over';
-
-            if (newMode === 'draw') {
-              strokeCountRef.current++;
-              if (strokeCountRef.current % 50 === 0) setStrokeCount(strokeCountRef.current);
-            }
           }
         }
         prevPointRef.current = { x: tipX, y: tipY };
@@ -241,6 +271,7 @@ export default function GestureCanvas() {
 
   const modeIcon = mode === 'draw' ? <Pen className="h-3.5 w-3.5" /> : mode === 'erase' ? <Eraser className="h-3.5 w-3.5" /> : <Hand className="h-3.5 w-3.5" />;
   const modeColor = mode === 'draw' ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/25' : mode === 'erase' ? 'text-amber-400 bg-amber-500/10 border-amber-500/25' : 'text-slate-400 bg-slate-800 border-slate-700';
+  const isFront = facingMode === 'user';
 
   return (
     <div id="gesture-canvas-module" className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -260,9 +291,7 @@ export default function GestureCanvas() {
             </span>
           </div>
 
-          {/* Canvas area */}
           <div className="relative rounded-2xl overflow-hidden border border-slate-700 bg-slate-950" style={{ aspectRatio: '4/3' }}>
-            {/* Drawing canvas (transparent background, draws persist) */}
             <canvas
               ref={drawCanvasRef}
               width={800}
@@ -270,10 +299,8 @@ export default function GestureCanvas() {
               className="absolute inset-0 w-full h-full z-10"
               style={{ background: 'transparent' }}
             />
-            {/* Grid background */}
             <div className="absolute inset-0 z-0 opacity-10"
               style={{ backgroundImage: 'linear-gradient(#6366f130 1px, transparent 1px), linear-gradient(90deg, #6366f130 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-            {/* Mode overlay hint */}
             {mode === 'lift' && (
               <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
                 <div className="text-center">
@@ -284,7 +311,6 @@ export default function GestureCanvas() {
             )}
           </div>
 
-          {/* Canvas controls */}
           <div className="flex flex-wrap items-center gap-2">
             <button onClick={clearCanvas} className="flex items-center gap-1.5 px-3 py-2 bg-rose-600/15 hover:bg-rose-600/25 border border-rose-500/25 text-rose-300 rounded-xl text-xs font-medium transition-colors">
               <Trash2 className="h-3.5 w-3.5" /> Clear
@@ -318,21 +344,22 @@ export default function GestureCanvas() {
 
       {/* Camera + Controls panel */}
       <div className="lg:col-span-4 flex flex-col gap-4">
-        {/* Camera PIP with skeleton overlay */}
         <div className="bg-slate-900 border border-slate-800 p-4 rounded-3xl flex flex-col gap-3 shadow-lg">
           <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
             <span className="font-sans text-sm font-semibold text-slate-200">Hand Tracking</span>
-            {modelLoading ? (
-              <span className="flex items-center gap-1.5 text-[10px] font-mono text-amber-400">
-                <RefreshCw className="h-3 w-3 animate-spin" /> Loading...
-              </span>
-            ) : modelReady ? (
-              <span className="flex items-center gap-1.5 text-[10px] font-mono text-indigo-300">
-                <Cpu className="h-3 w-3" /> AI READY
-              </span>
-            ) : (
-              <span className="text-[10px] font-mono text-rose-400">ERROR</span>
-            )}
+            <div className="flex items-center gap-2">
+              {modelLoading ? (
+                <span className="flex items-center gap-1 text-[10px] font-mono text-amber-400">
+                  <RefreshCw className="h-3 w-3 animate-spin" /> Loading AI...
+                </span>
+              ) : modelReady ? (
+                <span className="flex items-center gap-1 text-[10px] font-mono text-indigo-300">
+                  <Cpu className="h-3 w-3" /> AI READY
+                </span>
+              ) : (
+                <span className="text-[10px] font-mono text-rose-400">ERROR</span>
+              )}
+            </div>
           </div>
 
           {error && (
@@ -342,24 +369,41 @@ export default function GestureCanvas() {
             </div>
           )}
 
-          {/* Camera with skeleton overlay */}
+          {/* Camera PIP with skeleton overlay */}
           <div className="relative rounded-2xl overflow-hidden border border-slate-800 bg-slate-950" style={{ aspectRatio: '4/3' }}>
+            {cameraLoading && (
+              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-slate-950/90">
+                <RefreshCw className="h-7 w-7 animate-spin text-indigo-400 mb-2" />
+                <p className="font-sans text-[11px] text-slate-400">
+                  {isFront ? 'Switching to front camera...' : 'Switching to rear camera...'}
+                </p>
+              </div>
+            )}
             <video
+              ref={videoRef}
               id="camera-video-element"
               autoPlay playsInline muted
-              className="w-full h-full object-cover scale-x-[-1]"
-              ref={el => {
-                if (el && !el.srcObject) {
-                  navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: 'user' }, audio: false })
-                    .then(s => { el.srcObject = s; })
-                    .catch(() => setError('Camera access denied. Please allow camera permissions.'));
-                }
-              }}
+              className={`w-full h-full object-cover ${isFront ? 'scale-x-[-1]' : ''}`}
             />
             <canvas
               ref={skelCanvasRef}
               className="absolute inset-0 w-full h-full z-10 pointer-events-none"
             />
+            {/* Flip camera button */}
+            <button
+              onClick={flipCamera}
+              title={isFront ? 'Switch to rear camera' : 'Switch to front camera'}
+              className="absolute bottom-2 right-2 z-20 flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-900/80 hover:bg-slate-800 backdrop-blur-sm border border-slate-700/60 rounded-xl text-slate-300 hover:text-white transition-all text-[10px] font-sans font-medium shadow"
+            >
+              <SwitchCamera className="h-3.5 w-3.5" />
+              {isFront ? 'Rear' : 'Front'}
+            </button>
+          </div>
+
+          {/* Camera label */}
+          <div className="flex items-center justify-between text-[10px] font-mono text-slate-500">
+            <span>{isFront ? '🤳 Front camera (selfie)' : '📷 Rear camera (back)'}</span>
+            <span className="text-indigo-400">{isFront ? 'Mirrored' : 'Normal view'}</span>
           </div>
 
           {/* Gesture status */}
@@ -372,14 +416,14 @@ export default function GestureCanvas() {
         {/* Gesture guide */}
         <div className="bg-slate-900 border border-slate-800 p-4 rounded-3xl flex flex-col gap-3 shadow-lg">
           <h4 className="font-sans font-semibold text-sm text-slate-200 border-b border-slate-800/60 pb-2">Gesture Controls</h4>
-          <div className="space-y-2 text-[11px] font-sans">
+          <div className="space-y-0 text-[11px] font-sans">
             {[
               { icon: '☝', label: 'Index finger only', action: 'DRAW', color: 'text-indigo-300' },
               { icon: '✌', label: 'Peace sign (index + middle)', action: 'ERASE', color: 'text-amber-300' },
               { icon: '✊', label: 'Closed fist', action: 'PEN UP', color: 'text-slate-400' },
               { icon: '🖐', label: 'Open hand (3+ fingers)', action: 'CLEAR ALL', color: 'text-rose-300' },
             ].map(g => (
-              <div key={g.label} className="flex items-center justify-between py-1.5 border-b border-slate-800/40 last:border-0">
+              <div key={g.label} className="flex items-center justify-between py-2 border-b border-slate-800/40 last:border-0">
                 <div className="flex items-center gap-2">
                   <span className="text-base">{g.icon}</span>
                   <span className="text-slate-400">{g.label}</span>
