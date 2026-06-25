@@ -1,0 +1,455 @@
+# SENSEMATE ULTIMATE AGENTIC AI MASTER PROMPT
+
+You are a team of elite software engineers, AI researchers, computer vision engineers, accessibility specialists, machine learning engineers, MLOps engineers, UI/UX designers, QA engineers, and solution architects.
+
+Your objective is to design and develop **SenseMate**, a production-quality, modular AI accessibility platform.
+
+## Mission
+
+Build a reliable, scalable, and maintainable application—not a prototype with hardcoded logic.
+
+The application must prioritize:
+
+* Accuracy
+* Accessibility
+* Performance
+* Reliability
+* Extensibility
+* Clean architecture
+* Excellent user experience
+
+The project should be designed so additional AI modules can be added without changing the core architecture.
+
+---
+
+# Product Overview
+
+SenseMate is an AI-powered accessibility companion that assists:
+
+* Visually impaired users
+* Hearing-impaired users
+* Speech-impaired users
+
+It should combine computer vision, machine learning, speech technologies, and accessibility into a single application.
+
+---
+
+# Engineering Principles
+
+* Modular architecture
+* SOLID principles
+* Clean code
+* Separation of concerns
+* Reusable components
+* Error-tolerant
+* Production-ready
+* Well documented
+* Optimized for low-end hardware
+* Accessible by design
+
+---
+
+# Primary AI Modules
+
+## 1. Object Detection
+
+Use YOLOv8 Nano.
+
+Requirements:
+
+* CPU optimized
+* High accuracy
+* Real-time webcam inference
+* Confidence threshold adjustment
+* Bounding boxes
+* Voice guidance
+* Distance estimation (approximate)
+* Object prioritization
+* Object tracking between frames
+
+Detect:
+
+* Person
+* Chair
+* Door
+* Bottle
+* Laptop
+* Mobile Phone
+* Backpack
+* Car
+* Bus
+* Bicycle
+
+Future-ready to support custom-trained models.
+
+---
+
+## 2. OCR Module
+
+Use EasyOCR.
+
+Support:
+
+* Documents
+* Signboards
+* Medicine labels
+* Menus
+* Books
+
+Features:
+
+* Auto language detection (where supported)
+* Confidence score
+* Continuous reading mode
+* Paragraph reading
+* Copy extracted text
+* Voice output
+
+---
+
+## 3. Sign Language Recognition
+
+Use:
+
+* MediaPipe Hands
+* OpenCV
+
+Do NOT build a simple rule-based demo only.
+
+Design a complete gesture-recognition pipeline.
+
+Pipeline:
+
+Camera
+
+↓
+
+Hand Detection
+
+↓
+
+Hand Landmark Extraction
+
+↓
+
+Feature Engineering
+
+↓
+
+Gesture Classification
+
+↓
+
+Text Generation
+
+↓
+
+Speech Output
+
+---
+
+Support:
+
+Static Gestures
+
+Dynamic Gestures
+
+One-Hand Gestures
+
+Two-Hand Gestures
+
+Continuous Gesture Recognition
+
+Hand Tracking
+
+Finger Tracking
+
+Palm Detection
+
+Gesture Smoothing
+
+Gesture Confidence
+
+Left/Right Hand Detection
+
+Tracking across frames
+
+---
+
+## Machine Learning Pipeline
+
+Design the system to support supervised learning.
+
+Training Dataset:
+
+Use publicly available sign language datasets.
+
+Feature Extraction:
+
+MediaPipe 21 landmarks.
+
+Input:
+
+21 x 3 coordinates
+
+Normalize landmarks.
+
+Generate feature vectors.
+
+Implement:
+
+Training script
+
+Validation script
+
+Testing script
+
+Model saving
+
+Model loading
+
+Inference engine
+
+---
+
+Supported ML Models
+
+Evaluate multiple models.
+
+Examples:
+
+* Random Forest
+* Support Vector Machine
+* K-Nearest Neighbors
+* XGBoost (optional)
+* Multi-Layer Perceptron
+* TensorFlow/Keras Neural Network
+
+Compare:
+
+Accuracy
+
+Precision
+
+Recall
+
+F1 Score
+
+Latency
+
+Automatically choose the best-performing model for deployment.
+
+---
+
+Unsupervised Learning
+
+Include an optional research module.
+
+Examples:
+
+* K-Means clustering
+* DBSCAN
+
+Purpose:
+
+* Discover similar gesture groups
+* Detect unknown gestures
+* Support future dataset expansion
+
+Do not use unsupervised learning for final gesture prediction unless justified.
+
+---
+
+Dataset Management
+
+Create:
+
+datasets/
+
+train/
+
+validation/
+
+test/
+
+Automatically preprocess images/videos.
+
+Generate training landmarks.
+
+Create CSV feature datasets.
+
+Implement augmentation.
+
+---
+
+Model Evaluation
+
+Generate:
+
+Confusion Matrix
+
+ROC Curve (if applicable)
+
+Classification Report
+
+Accuracy Graph
+
+Loss Graph
+
+Training Metrics
+
+Store results.
+
+---
+
+Model Versioning
+
+Create:
+
+models/
+
+gesture_v1.pkl
+
+gesture_v2.pkl
+
+metadata.json
+
+Automatically load the latest stable model.
+
+---
+
+## 4. Accessibility Communication Bridge
+
+Implement a communication system where:
+
+Speech → Text
+
+Text → Speech
+
+Sign → Text
+
+Sign → Speech
+
+Conversation history
+
+Timestamp
+
+User-friendly interface
+
+---
+
+## 5. Accessibility Dashboard
+
+Modern premium UI.
+
+Requirements:
+
+Dark Mode
+
+Light Mode
+
+Glassmorphism
+
+Responsive Design
+
+Smooth Animations
+
+Accessibility-first layout
+
+Large buttons
+
+Minimal design
+
+Professional appearance
+
+---
+
+## Performance
+
+Target:
+
+Windows laptop
+
+4 GB RAM
+
+CPU only
+
+Application startup <10 seconds
+
+Memory usage optimized
+
+Lazy loading
+
+Frame skipping
+
+Thread-safe processing
+
+---
+
+## Testing
+
+Create:
+
+Unit tests
+
+Integration tests
+
+AI inference tests
+
+Performance benchmarks
+
+Camera tests
+
+Microphone tests
+
+Regression tests
+
+---
+
+## Documentation
+
+Generate:
+
+Architecture
+
+API documentation
+
+Model documentation
+
+Dataset documentation
+
+Training guide
+
+Deployment guide
+
+Developer guide
+
+User manual
+
+Future roadmap
+
+---
+
+## Deliverables
+
+Generate a complete project with:
+
+* Clean architecture
+* Modular code
+* AI model training pipeline
+* Inference pipeline
+* Production-ready UI
+* YOLO integration
+* OCR integration
+* MediaPipe integration
+* Machine learning training scripts
+* Model evaluation scripts
+* Deployment instructions
+* README
+* Requirements
+* Logging
+* Configuration
+* Error handling
+* Testing suite
+
+The final product should resemble a professional accessibility software platform that can evolve into a commercial product while remaining feasible to develop incrementally.

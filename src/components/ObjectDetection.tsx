@@ -123,6 +123,36 @@ export default function ObjectDetection() {
     }
   };
 
+  const CLASS_COLORS: Record<string, string> = {
+    'person':       '#ef4444',
+    'car':          '#22d3ee',
+    'bus':          '#3b82f6',
+    'truck':        '#6366f1',
+    'bicycle':      '#eab308',
+    'motorcycle':   '#f97316',
+    'bottle':       '#22c55e',
+    'laptop':       '#a855f7',
+    'cell phone':   '#f43f5e',
+    'chair':        '#fb923c',
+    'couch':        '#d97706',
+    'backpack':     '#14b8a6',
+    'handbag':      '#8b5cf6',
+    'clock':        '#94a3b8',
+    'book':         '#84cc16',
+    'cup':          '#ec4899',
+    'dog':          '#f59e0b',
+    'cat':          '#10b981',
+    'bird':         '#06b6d4',
+    'tv':           '#0ea5e9',
+    'keyboard':     '#7c3aed',
+    'mouse':        '#be185d',
+    'remote':       '#78716c',
+    'scissors':     '#dc2626',
+    'fork':         '#65a30d',
+    'knife':        '#b45309',
+  };
+  const getClassColor = (cls: string) => CLASS_COLORS[cls.toLowerCase()] ?? '#6366f1';
+
   const drawOverlays = (
     objs: DetectedObject[],
     raw: CocoDetection[],
@@ -133,7 +163,6 @@ export default function ObjectDetection() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Sync canvas DOM dimensions to its rendered CSS size
     const rect = canvas.getBoundingClientRect();
     if (rect.width > 0) canvas.width = rect.width;
     if (rect.height > 0) canvas.height = rect.height;
@@ -143,41 +172,64 @@ export default function ObjectDetection() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw zone dividers
-    ctx.strokeStyle = "rgba(99, 102, 241, 0.15)";
+    // Subtle zone dividers (left / center / right)
+    ctx.setLineDash([4, 6]);
+    ctx.strokeStyle = "rgba(99, 102, 241, 0.12)";
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(canvas.width / 3, 0); ctx.lineTo(canvas.width / 3, canvas.height);
     ctx.moveTo((canvas.width * 2) / 3, 0); ctx.lineTo((canvas.width * 2) / 3, canvas.height);
     ctx.stroke();
+    ctx.setLineDash([]);
 
-    // Draw real COCO-SSD bounding boxes
-    raw.filter(p => p.score > 0.35).forEach((pred, i) => {
+    // Draw YOLO-style bounding boxes with class-specific colors
+    const sorted = [...raw.filter(p => p.score > 0.35)].sort((a, b) => b.score - a.score);
+    sorted.forEach((pred) => {
       const [bx, by, bw, bh] = pred.bbox;
       const x = bx * scaleX;
       const y = by * scaleY;
       const w = bw * scaleX;
       const h = bh * scaleY;
       const conf = Math.round(pred.score * 100);
-      const label = pred.class.toUpperCase();
+      const cls = pred.class;
+      const label = cls.toUpperCase();
+      const color = getClassColor(cls);
 
-      ctx.fillStyle = "rgba(99, 102, 241, 0.08)";
-      ctx.strokeStyle = i === 0 ? "rgb(129, 140, 248)" : "rgb(94, 234, 212)";
-      ctx.lineWidth = 2;
+      // Box fill
+      ctx.fillStyle = `${color}14`; // ~8% opacity fill
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
-      ctx.roundRect(x, y, w, h, 6);
+      ctx.roundRect(x, y, w, h, 5);
       ctx.fill();
       ctx.stroke();
 
-      const textW = ctx.measureText(`${label} ${conf}%`).width + 20;
-      ctx.fillStyle = i === 0 ? "rgb(99, 102, 241)" : "rgb(20, 184, 166)";
+      // Corner accents (YOLO-style tick marks at corners)
+      const tick = Math.min(w, h) * 0.12 + 6;
+      ctx.lineWidth = 3.5;
+      ctx.strokeStyle = color;
+      [[x, y], [x + w, y], [x, y + h], [x + w, y + h]].forEach(([cx, cy], ci) => {
+        ctx.beginPath();
+        ctx.moveTo(cx + (ci % 2 === 0 ? tick : -tick), cy);
+        ctx.lineTo(cx, cy);
+        ctx.lineTo(cx, cy + (ci < 2 ? tick : -tick));
+        ctx.stroke();
+      });
+
+      // Label pill: "{CLASS} {CONF}%"
+      ctx.font = "bold 11px 'Courier New', monospace";
+      const text = `${label}  ${conf}%`;
+      const textW = ctx.measureText(text).width + 14;
+      const tagH = 22;
+      const tagY = y > tagH + 2 ? y - tagH : y + h;
+
+      ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.roundRect(x, Math.max(0, y - 22), textW, 22, [4, 4, 0, 0]);
+      ctx.roundRect(x, tagY, textW, tagH, [4, 4, y > tagH + 2 ? 0 : 4, y > tagH + 2 ? 0 : 4]);
       ctx.fill();
 
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 11px monospace";
-      ctx.fillText(`${label} ${conf}%`, x + 6, Math.max(14, y - 6));
+      ctx.fillStyle = '#000000';
+      ctx.fillText(text, x + 7, tagY + 15);
     });
   };
 
