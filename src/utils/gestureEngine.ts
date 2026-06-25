@@ -2,7 +2,11 @@ import * as handPoseDetection from '@tensorflow-models/hand-pose-detection';
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-backend-webgl';
 
-export type GestureName = 'Hello' | 'Help' | 'Thank You' | 'Yes' | 'No' | 'Unknown';
+export type GestureName =
+  | 'Hello'     | 'Stop'    | 'Thank You' | 'Yes'    | 'No'
+  | 'Help'      | 'Call Me' | 'Peace'     | 'Point'  | 'Water'
+  | 'Come'      | 'Okay'    | 'Love'      | 'Sorry'  | 'Please'
+  | 'Unknown';
 export type ASLLetter = 'A'|'B'|'C'|'D'|'E'|'F'|'G'|'H'|'I'|'K'|'L'|'M'|'N'|'O'|'R'|'S'|'T'|'U'|'V'|'W'|'X'|'Y'|'?';
 
 let detector: handPoseDetection.HandDetector | null = null;
@@ -58,55 +62,89 @@ export async function getHandKeypoints(
   return { keypoints: hands[0].keypoints, videoWidth: w, videoHeight: h };
 }
 
-const TIP = { THUMB: 4, INDEX: 8, MIDDLE: 12, RING: 16, PINKY: 20 };
-const MCP = { INDEX: 5, MIDDLE: 9, RING: 13, PINKY: 17 };
-const PIP = { INDEX: 6, MIDDLE: 10, RING: 14, PINKY: 18 };
-
-function fingerUp(kps: handPoseDetection.Keypoint[], tip: number, pip: number): boolean {
-  return kps[tip].y < kps[pip].y;
+function fDist(a: handPoseDetection.Keypoint, b: handPoseDetection.Keypoint) {
+  return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
 function classifyHand(kps: handPoseDetection.Keypoint[]): { gesture: GestureName; meaning: string; score: number; debugInfo: string } {
-  // Y axis in image space: smaller Y = higher in frame (tip above pip = finger extended)
-  const indexUp  = fingerUp(kps, TIP.INDEX,  PIP.INDEX);
-  const middleUp = fingerUp(kps, TIP.MIDDLE, PIP.MIDDLE);
-  const ringUp   = fingerUp(kps, TIP.RING,   PIP.RING);
-  const pinkyUp  = fingerUp(kps, TIP.PINKY,  PIP.PINKY);
-  const extended = [indexUp, middleUp, ringUp, pinkyUp].filter(Boolean).length;
+  // ── finger extension (tip above PIP in image space, smaller Y = higher) ──
+  const iUp = kps[8].y  < kps[6].y;
+  const mUp = kps[12].y < kps[10].y;
+  const rUp = kps[16].y < kps[14].y;
+  const pUp = kps[20].y < kps[18].y;
+  const tUp = kps[4].y  < kps[2].y - 15;   // thumb raised above base
+  const tSide = Math.abs(kps[4].x - kps[5].x) > 22; // thumb spread from index MCP
 
-  // Thumb: compare tip Y to thumb MCP (kp 2) — tip higher in frame (smaller Y) = extended up
-  const thumbExtended = kps[TIP.THUMB].y < kps[2].y - 15;
+  const ext = [iUp, mUp, rUp, pUp].filter(Boolean).length;
 
-  const debugInfo = `I:${indexUp?'↑':'↓'} M:${middleUp?'↑':'↓'} R:${ringUp?'↑':'↓'} P:${pinkyUp?'↑':'↓'} T:${thumbExtended?'↑':'↓'} [${extended}/4]`;
+  // finger spread helpers
+  const spreadIM = Math.abs(kps[8].x  - kps[12].x);   // index-middle
+  const spreadMR = Math.abs(kps[12].x - kps[16].x);   // middle-ring
+  const thumbIndexDist = fDist(kps[4], kps[8]);  // thumb tip → index tip
 
-  // Open hand (Hello): 3 or 4 fingers extended
-  if (extended >= 3) {
-    return { gesture: 'Hello', meaning: 'The person is greeting you — Hello!', score: extended === 4 ? 92 : 85, debugInfo };
-  }
-  // Thumbs up (Yes): thumb raised, all other fingers folded
-  if (thumbExtended && extended <= 1) {
-    return { gesture: 'Yes', meaning: 'The person is agreeing — Yes!', score: 88, debugInfo };
-  }
-  // Horns sign (No): index + pinky extended, middle + ring folded
-  if (indexUp && !middleUp && !ringUp && pinkyUp) {
-    return { gesture: 'No', meaning: 'The person is saying No!', score: 86, debugInfo };
-  }
-  // Three fingers up (Thank You): index + middle + ring
-  if (indexUp && middleUp && ringUp && !pinkyUp) {
-    return { gesture: 'Thank You', meaning: 'The person is expressing gratitude — Thank You!', score: 87, debugInfo };
-  }
-  // Two fingers peace / V sign (Help)
-  if (indexUp && middleUp && !ringUp && !pinkyUp) {
-    return { gesture: 'Help', meaning: 'The person is asking for Help!', score: 85, debugInfo };
-  }
-  // Single pointing finger (Help)
-  if (indexUp && !middleUp && !ringUp && !pinkyUp) {
-    return { gesture: 'Help', meaning: 'The person needs help — pointing gesture detected!', score: 83, debugInfo };
-  }
-  // Closed fist — needs help
-  if (extended === 0 && !thumbExtended) {
-    return { gesture: 'Help', meaning: 'The person needs assistance — Help!', score: 78, debugInfo };
-  }
+  const debugInfo =
+    `I:${iUp?'↑':'↓'} M:${mUp?'↑':'↓'} R:${rUp?'↑':'↓'} P:${pUp?'↑':'↓'} ` +
+    `T:${tUp?'↑':'↓'} Ts:${tSide?'→':'·'} [${ext}/4]`;
+
+  // ── 1. Love — ILY: index + pinky + thumb, middle + ring folded ──────────
+  if (iUp && !mUp && !rUp && pUp && tUp)
+    return { gesture: 'Love', meaning: 'I Love You — ILY sign!', score: 91, debugInfo };
+
+  // ── 2. Call Me — thumb + pinky, other 3 folded ──────────────────────────
+  if (!iUp && !mUp && !rUp && pUp && tUp)
+    return { gesture: 'Call Me', meaning: 'Call me! — phone hand gesture', score: 90, debugInfo };
+
+  // ── 3. Stop — all 5 up, thumb also extended ─────────────────────────────
+  if (ext >= 4 && tUp)
+    return { gesture: 'Stop', meaning: 'Stop — open palm raised', score: 92, debugInfo };
+
+  // ── 4. Hello — 4 main fingers up, thumb relaxed ─────────────────────────
+  if (ext >= 4)
+    return { gesture: 'Hello', meaning: 'Hello! — greeting wave', score: 89, debugInfo };
+
+  // ── 5. Yes — thumbs up, all 4 fingers folded ────────────────────────────
+  if (tUp && ext === 0)
+    return { gesture: 'Yes', meaning: 'Yes — thumbs up!', score: 90, debugInfo };
+
+  // ── 6. No — horns (index + pinky, middle + ring folded) ─────────────────
+  if (iUp && pUp && !mUp && !rUp)
+    return { gesture: 'No', meaning: 'No — horns sign', score: 88, debugInfo };
+
+  // ── 7. Water — W sign: index + middle + ring spread ─────────────────────
+  if (iUp && mUp && rUp && !pUp && (spreadIM > 22 || spreadMR > 22))
+    return { gesture: 'Water', meaning: 'Water — W hand shape', score: 86, debugInfo };
+
+  // ── 8. Thank You — index + middle + ring, together ──────────────────────
+  if (iUp && mUp && rUp && !pUp)
+    return { gesture: 'Thank You', meaning: 'Thank You — three fingers raised', score: 87, debugInfo };
+
+  // ── 9. Peace — index + middle spread (V sign) ───────────────────────────
+  if (iUp && mUp && !rUp && !pUp && spreadIM > 25)
+    return { gesture: 'Peace', meaning: 'Peace / Victory — V sign', score: 87, debugInfo };
+
+  // ── 10. Come — index + middle together (beckoning) ──────────────────────
+  if (iUp && mUp && !rUp && !pUp && spreadIM <= 25)
+    return { gesture: 'Come', meaning: 'Come here — two fingers together', score: 83, debugInfo };
+
+  // ── 11. Okay / Please — O shape: index+thumb pinch, others extended ─────
+  if (!iUp && mUp && rUp && pUp && thumbIndexDist < 32)
+    return { gesture: 'Okay', meaning: 'Okay / Please — O hand shape', score: 82, debugInfo };
+
+  // ── 12. Please — flat palm (all up) rotating? Use thumb-side open variant
+  if (!iUp && mUp && rUp && pUp && tSide)
+    return { gesture: 'Please', meaning: 'Please — open palm gesture', score: 79, debugInfo };
+
+  // ── 13. Point / Go — index only ─────────────────────────────────────────
+  if (iUp && !mUp && !rUp && !pUp && !tUp)
+    return { gesture: 'Point', meaning: 'Pointing / Go — single index finger', score: 85, debugInfo };
+
+  // ── 14. Sorry — closed fist, thumb across knuckles ──────────────────────
+  if (ext === 0 && !tUp && !tSide)
+    return { gesture: 'Sorry', meaning: 'Sorry — closed fist (S shape)', score: 80, debugInfo };
+
+  // ── 15. Help — SOS: thumb-side fist ─────────────────────────────────────
+  if (ext === 0)
+    return { gesture: 'Help', meaning: 'Help! — SOS distress signal', score: 82, debugInfo };
 
   return { gesture: 'Unknown', meaning: 'Gesture not clearly recognized. Show your full hand closer to the camera.', score: 0, debugInfo };
 }

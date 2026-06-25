@@ -20,7 +20,7 @@ export interface OCRResponse {
 }
 
 export interface GestureResponse {
-  gesture: 'Hello' | 'Help' | 'Thank You' | 'Yes' | 'No' | 'Unknown';
+  gesture: import('./utils/gestureEngine').GestureName;
   meaning: string;
   confidenceScore: number;
   debugInfo?: string;

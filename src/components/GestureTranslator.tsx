@@ -27,11 +27,21 @@ const ASL_ALPHABET_GUIDE: { letter: string; hint: string }[] = [
 ];
 
 const SIGN_GUIDE = [
-  { name: "Hello", description: "Open flat hand — all 4 fingers extended, palm facing camera." },
-  { name: "Yes", description: "Closed fist with thumb up — all fingers curled down." },
-  { name: "Help", description: "Closed fist without thumb, or single index finger raised." },
-  { name: "Thank You", description: "Three fingers up — index, middle, and ring extended." },
-  { name: "No", description: "Index and pinky extended, middle and ring down (horns sign)." },
+  { name: "Hello",     description: "Open hand — 4 fingers extended, palm facing camera." },
+  { name: "Stop",      description: "All 5 up — 4 fingers + thumb fully extended, palm forward." },
+  { name: "Yes",       description: "Thumbs up — all 4 fingers folded down, thumb raised." },
+  { name: "No",        description: "Horns — index + pinky up, middle + ring folded." },
+  { name: "Thank You", description: "3 fingers — index + middle + ring up, together." },
+  { name: "Water",     description: "W sign — index + middle + ring spread wide apart." },
+  { name: "Peace",     description: "V sign — index + middle up, spread apart (peace)." },
+  { name: "Come",      description: "Beckon — index + middle up, close together." },
+  { name: "Love",      description: "ILY — index + pinky + thumb up, middle + ring folded." },
+  { name: "Call Me",   description: "Phone — thumb + pinky up, other 3 fingers folded." },
+  { name: "Point",     description: "Index only — single finger pointing, others curled." },
+  { name: "Okay",      description: "O shape — thumb + index tip touching, other 3 up." },
+  { name: "Please",    description: "Open palm — 3 fingers + thumb spread to side." },
+  { name: "Sorry",     description: "S fist — closed fist, thumb over knuckles." },
+  { name: "Help",      description: "SOS fist — closed fist, thumb-side distress signal." },
 ];
 
 export default function GestureTranslator() {

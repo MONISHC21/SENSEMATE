@@ -4,11 +4,6 @@
  */
 
 import { Info, User, GraduationCap, Award, Brain, Eye, Hand, Zap, ArrowRight, Layers, Cpu } from "lucide-react";
-import detectionImg from "@assets/ref_detection.png";
-import signLangImg  from "@assets/ref_signlang.png";
-import mediapipeImg from "@assets/ref_mediapipe.png";
-import pipelineImg  from "@assets/ref_pipeline.png";
-import yoloImg      from "@assets/ref_yolo.png";
 
 const AI_STACK = [
   {
@@ -182,45 +177,6 @@ export default function AboutPage() {
         </div>
       </div>
 
-      {/* ── Reference Architecture Images ───────────────────────────── */}
-      <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl">
-        <h4 className="font-sans font-bold text-base text-slate-100 mb-5 flex items-center gap-2 border-b border-slate-800/80 pb-4">
-          <Brain className="h-5 w-5 text-indigo-400" />
-          Computer Vision Architecture — Reference Diagrams
-        </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex flex-col gap-2">
-            <img src={detectionImg} alt="YOLO-style Object Detection with bounding boxes" className="rounded-2xl w-full border border-slate-800 object-cover" />
-            <p className="font-sans text-[11px] text-slate-400 leading-relaxed px-1">
-              <span className="text-slate-200 font-semibold">Object Detection Output</span> — COCO-SSD produces per-class colored bounding boxes. Each box shows the class label and confidence score. Higher confidence = thicker box highlight.
-            </p>
-          </div>
-          <div className="flex flex-col gap-2">
-            <img src={yoloImg} alt="YOLO detection algorithm explanation" className="rounded-2xl w-full border border-slate-800 object-cover" />
-            <p className="font-sans text-[11px] text-slate-400 leading-relaxed px-1">
-              <span className="text-slate-200 font-semibold">YOLO Architecture</span> — The model outputs p₀ (object probability), x/y (center), w/h (size), and c₁…cₙ (class scores) for each grid cell in a single forward pass.
-            </p>
-          </div>
-          <div className="flex flex-col gap-2">
-            <img src={signLangImg} alt="ASL sign language gesture recognition showing V sign" className="rounded-2xl w-full border border-slate-800 object-cover" />
-            <p className="font-sans text-[11px] text-slate-400 leading-relaxed px-1">
-              <span className="text-slate-200 font-semibold">ASL Sign Recognition</span> — MediaPipe Hands detects 21 landmarks per hand. SenseMate classifies finger extension patterns to recognize ASL alphabet letters and core sign language gestures.
-            </p>
-          </div>
-          <div className="flex flex-col gap-2">
-            <img src={mediapipeImg} alt="MediaPipe hand tracking, pose tracking, and face tracking" className="rounded-2xl w-full border border-slate-800 object-cover" />
-            <p className="font-sans text-[11px] text-slate-400 leading-relaxed px-1">
-              <span className="text-slate-200 font-semibold">MediaPipe Capabilities</span> — The same MediaPipe framework powering SenseMate's gesture module also supports body pose estimation and face mesh tracking, making the architecture extensible to full-body accessibility use cases.
-            </p>
-          </div>
-        </div>
-        <div className="mt-4">
-          <img src={pipelineImg} alt="CNN detection and training pipeline diagram" className="rounded-2xl w-full border border-slate-800 object-cover max-h-64 object-top" />
-          <p className="font-sans text-[11px] text-slate-400 leading-relaxed px-1 mt-2">
-            <span className="text-slate-200 font-semibold">CNN Detection Pipeline</span> — During inference, each image frame is preprocessed and passed through the convolutional neural network to produce bounding box predictions and class probabilities. The pipeline runs at 5–15 FPS in-browser on CPU.
-          </p>
-        </div>
-      </div>
     </div>
   );
 }

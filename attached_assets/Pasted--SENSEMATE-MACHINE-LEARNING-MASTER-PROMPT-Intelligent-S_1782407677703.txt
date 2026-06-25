@@ -1,0 +1,554 @@
+# SENSEMATE – MACHINE LEARNING MASTER PROMPT
+
+## Intelligent Sign Language Recognition System
+
+You are an expert Machine Learning Engineer, Computer Vision Engineer, Deep Learning Researcher, MLOps Engineer, AI Software Architect, and Python Developer.
+
+Your task is to design and develop a production-ready Machine Learning module for **SenseMate** that accurately recognizes sign language gestures in real time.
+
+The module must be modular, scalable, accurate, and easy to integrate with the main SenseMate application.
+
+---
+
+# OBJECTIVE
+
+Develop a complete Sign Language Recognition Pipeline using Computer Vision and Machine Learning.
+
+The pipeline should:
+
+Camera
+
+↓
+
+OpenCV
+
+↓
+
+MediaPipe Hands
+
+↓
+
+21 Hand Landmarks
+
+↓
+
+Feature Engineering
+
+↓
+
+Machine Learning Model
+
+↓
+
+Gesture Prediction
+
+↓
+
+Text Output
+
+↓
+
+Speech Output
+
+The module must be capable of running in real time on CPU without requiring a GPU.
+
+---
+
+# REQUIREMENTS
+
+Use Python.
+
+Use VS Code.
+
+Target Device:
+
+Windows Laptop
+
+4GB RAM
+
+CPU Only
+
+No GPU Dependency.
+
+---
+
+# COMPUTER VISION
+
+Use:
+
+OpenCV
+
+MediaPipe Hands
+
+Detect:
+
+Left Hand
+
+Right Hand
+
+Both Hands
+
+Extract:
+
+21 Hand Landmarks
+
+Each Landmark:
+
+x
+
+y
+
+z
+
+Visibility (if available)
+
+Normalize all landmark coordinates.
+
+Create stable feature vectors.
+
+Implement smoothing to reduce prediction flicker.
+
+---
+
+# DATASET PIPELINE
+
+Create a complete dataset collection module.
+
+Folder Structure:
+
+dataset/
+
+train/
+
+validation/
+
+test/
+
+Create scripts to:
+
+Capture images
+
+Capture landmark coordinates
+
+Store labels
+
+Create CSV datasets
+
+Perform preprocessing
+
+Perform normalization
+
+Perform augmentation
+
+Support at least 20 gesture classes.
+
+Example Classes:
+
+Hello
+
+Thank You
+
+Help
+
+Yes
+
+No
+
+Stop
+
+Please
+
+Water
+
+Food
+
+Hospital
+
+Emergency
+
+Good Morning
+
+Good Night
+
+Sorry
+
+Love
+
+Call
+
+Come
+
+Go
+
+Left
+
+Right
+
+Dataset should be expandable.
+
+---
+
+# FEATURE ENGINEERING
+
+Generate numerical features from MediaPipe landmarks.
+
+Include:
+
+Finger angles
+
+Finger distances
+
+Palm orientation
+
+Relative coordinates
+
+Hand rotation
+
+Finger bending
+
+Gesture symmetry
+
+Velocity (for dynamic gestures)
+
+Store processed features.
+
+---
+
+# SUPERVISED MACHINE LEARNING
+
+Implement multiple classification models.
+
+Train:
+
+Random Forest
+
+Support Vector Machine
+
+K-Nearest Neighbors
+
+Logistic Regression
+
+Decision Tree
+
+Gradient Boosting
+
+XGBoost (optional)
+
+Multi-layer Perceptron
+
+TensorFlow Neural Network
+
+Compare all models.
+
+Evaluate:
+
+Accuracy
+
+Precision
+
+Recall
+
+F1 Score
+
+Inference Speed
+
+Memory Usage
+
+Automatically select the best-performing model.
+
+---
+
+# DEEP LEARNING (OPTIONAL)
+
+Create optional modules using TensorFlow.
+
+Support:
+
+Feedforward Neural Networks
+
+LSTM (Future)
+
+GRU (Future)
+
+CNN + Landmark Features
+
+Design architecture to allow future upgrades.
+
+---
+
+# UNSUPERVISED LEARNING
+
+Create a research module.
+
+Implement:
+
+K-Means
+
+DBSCAN
+
+Hierarchical Clustering
+
+Purpose:
+
+Discover unknown gestures
+
+Group similar gestures
+
+Improve dataset quality
+
+Detect mislabeled samples
+
+Generate visualization.
+
+This module should NOT replace supervised gesture classification.
+
+---
+
+# MODEL TRAINING
+
+Create scripts:
+
+train.py
+
+evaluate.py
+
+predict.py
+
+save_model.py
+
+load_model.py
+
+retrain.py
+
+Support:
+
+Cross Validation
+
+Grid Search
+
+Hyperparameter Tuning
+
+Early Stopping
+
+Automatic Model Saving
+
+Model Versioning
+
+---
+
+# MODEL STORAGE
+
+models/
+
+gesture_rf.pkl
+
+gesture_svm.pkl
+
+gesture_knn.pkl
+
+gesture_nn.h5
+
+metadata.json
+
+Automatically load latest stable model.
+
+---
+
+# EVALUATION
+
+Generate:
+
+Confusion Matrix
+
+Classification Report
+
+Accuracy Curve
+
+Loss Curve
+
+ROC Curve (where applicable)
+
+Precision-Recall Curve
+
+Feature Importance
+
+Store all evaluation reports.
+
+---
+
+# REAL-TIME INFERENCE
+
+Webcam
+
+↓
+
+MediaPipe
+
+↓
+
+Feature Extraction
+
+↓
+
+Prediction
+
+↓
+
+Confidence Score
+
+↓
+
+Display Gesture
+
+↓
+
+Text
+
+↓
+
+Speech
+
+Display:
+
+Gesture Name
+
+Confidence
+
+Prediction Time
+
+FPS
+
+Support continuous real-time recognition.
+
+---
+
+# ERROR HANDLING
+
+Handle:
+
+No Hand Detected
+
+Multiple Hands
+
+Low Confidence
+
+Camera Failure
+
+Corrupted Model
+
+Missing Dataset
+
+Display user-friendly warnings.
+
+---
+
+# PERFORMANCE
+
+Target:
+
+4GB RAM
+
+CPU Only
+
+Real-time:
+
+15–20 FPS
+
+Low memory usage
+
+Fast inference
+
+Optimize using:
+
+NumPy
+
+Vectorization
+
+Lazy loading
+
+Model caching
+
+Frame skipping
+
+---
+
+# TESTING
+
+Generate:
+
+Unit Tests
+
+Inference Tests
+
+Dataset Validation
+
+Model Validation
+
+Performance Benchmarks
+
+Stress Testing
+
+Regression Testing
+
+---
+
+# DOCUMENTATION
+
+Generate:
+
+Dataset Guide
+
+Training Guide
+
+Model Architecture
+
+Inference Pipeline
+
+Evaluation Reports
+
+Developer Guide
+
+Integration Guide
+
+README
+
+API Documentation
+
+---
+
+# INTEGRATION WITH SENSEMATE
+
+Provide a clean Python API.
+
+Example:
+
+predict_gesture(frame)
+
+Return:
+
+Gesture Name
+
+Confidence
+
+Prediction Time
+
+This module must integrate seamlessly with the main SenseMate application without modifying the core application architecture.
+
+---
+
+# FINAL DELIVERABLES
+
+Generate:
+
+1. Dataset Collection Module
+2. Data Preprocessing Pipeline
+3. Feature Engineering Module
+4. Multiple Machine Learning Models
+5. Model Evaluation Scripts
+6. Training Scripts
+7. Real-Time Prediction Engine
+8. Model Versioning
+9. Complete Documentation
+10. Integration API
+
+The final system should be modular, maintainable, extensible, and capable of recognizing sign language accurately in real time while serving as the intelligent gesture recognition engine for SenseMate.
