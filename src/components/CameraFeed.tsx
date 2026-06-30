@@ -45,29 +45,52 @@ export default function CameraFeed({
   const startCamera = async (facing: "user" | "environment") => {
     setIsLoading(true);
     setError(null);
-    // Stop any existing stream first
+
     if (videoRef.current && videoRef.current.srcObject) {
       const old = videoRef.current.srcObject as MediaStream;
-      old.getTracks().forEach(t => t.stop());
+      old.getTracks().forEach((t) => t.stop());
       videoRef.current.srcObject = null;
     }
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
+
+    const attemptStream = async (targetFacing: "user" | "environment") => {
+      const constraints: MediaStreamConstraints = {
         video: {
           width: { ideal: 1280 },
           height: { ideal: 720 },
-          facingMode: { ideal: facing },
+          facingMode: { ideal: targetFacing },
         },
         audio: false,
-      });
+      };
+
+      return navigator.mediaDevices.getUserMedia(constraints);
+    };
+
+    try {
+      let mediaStream: MediaStream;
+      try {
+        mediaStream = await attemptStream(facing);
+      } catch (rearErr) {
+        if (facing === "environment") {
+          console.warn("Rear camera unavailable, falling back to front camera:", rearErr);
+          mediaStream = await attemptStream("user");
+          setFacingMode("user");
+        } else {
+          throw rearErr;
+        }
+      }
+
       setStream(mediaStream);
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        await videoRef.current.play().catch((playErr) => {
+          console.warn("Video preview could not autoplay:", playErr);
+          setError("Camera is available, but the preview could not start. Please tap the page and try again.");
+        });
       }
     } catch (err: any) {
       console.error("Camera access failed:", err);
       setError(
-        "Could not access the camera. Please ensure camera permissions are granted and no other app is using it."
+        "Could not access the camera. Please allow camera permission, use a supported browser, and make sure no other app is using it."
       );
     } finally {
       setIsLoading(false);
@@ -166,6 +189,14 @@ export default function CameraFeed({
         autoPlay
         playsInline
         muted
+        onLoadedMetadata={() => {
+          if (videoRef.current) {
+            videoRef.current.play().catch((err) => {
+              console.warn("Camera preview play failed:", err);
+            });
+          }
+        }}
+        onError={() => setError("The camera preview failed to load. Please refresh and try again.")}
         className={`w-full h-full object-cover ${isFront ? "scale-x-[-1]" : ""}`}
       />
 
